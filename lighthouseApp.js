@@ -5,7 +5,7 @@ const getLighthouseAccessibilityScore = async (url) => {
   const chrome = await chromeLauncher.launch({chromeFlags: ['--headless']});
   const options = {logLevel: 'info', output: 'html', onlyCategories: ['accessibility'], port: chrome.port};
   const runnerResult = await lighthouse(url, options);
-  console.log(runnerResult.lhr.categories)
+  
   const finalUrl = runnerResult.lhr.finalUrl;
   const accessibilityScore = runnerResult.lhr.categories.accessibility.score * 100;
 

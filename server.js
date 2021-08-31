@@ -38,23 +38,32 @@ app.route('/api/accessibility')
     })
     .post(async (req, res) => {
         const url = req.body.url;
+        console.log(url)
 
         const lighthouseResults = await getLighthouseaccessibilityScore(url);
 
-        lighthouseaccessibilitySchema.findOneAndUpdate(
+        Lighthouseaccessibility.findOneAndUpdate(
             {url: lighthouseResults.finalUrl}, 
             {accessibility: lighthouseResults.accessibilityScore, $inc: {searches: 1}}, 
             {useFindAndModify: false, new: true}, 
             (err, data) => {
                 if (!data){
-                    data = new Lighthouseaccessibilitys(lighthouseResults);
-                    console.log("New site accessibility created")
+                    data = new Lighthouseaccessibility({
+                        url: lighthouseResults.finalUrl,
+                        accessibility: lighthouseResults.accessibilityScore 
+                    });
+                    data.save((err) => {
+                        if(!err){
+                            console.log("New site accessibility created")
+                        }
+                    });
+                } else {
+                    data.save((err) => {
+                        if(!err){
+                            console.log("Update success");
+                        }
+                    });
                 }
-                data.save((err) => {
-                    if(!error){
-                        console.log("Save success");
-                    }
-                });
                 res.json(data);
             });
         // res.json(lighthouseResults);
