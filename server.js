@@ -18,8 +18,10 @@ const lighthouseaccessibilitySchema = new mongoose.Schema({
             type: Number,
             default: 1
         },
-    usersVoted: {type: Number},
-    userScore: {type: Number},
+    usersVoted: {
+        type: Array,
+        default: []
+    },
     comments: {
         type: Array,
         default: []
@@ -70,7 +72,7 @@ app.route('/api/accessibility')
                             }
                         });
                     }
-                    res.status(200).send(lighthouseResults.finalUrl);
+                    res.status(200).json({url: lighthouseResults.finalUrl});
                 });
         } catch(e) {
             res.status(500).send(e);
@@ -84,6 +86,25 @@ app.route("/api/accessibility/:url")
         // console.log(url);
         const urlResponse = await Lighthouseaccessibility.findOne({"url": url});
         res.json(urlResponse);
+    });
+
+app.route("/api/uservote/")
+    .post(async (req, res) => {
+        const [email, userScore, url] = [req.body.email, req.body.userScore, req.body.url];
+        try {
+            Lighthouseaccessibility.findOneAndUpdate(
+                {url: url},
+                {"$push": [email, userScore]},
+                {useFindAndModify: false},
+                (err, data) => {
+                    if(err)
+                        res.status(400).send(err);
+                        return;
+                    
+                })
+        } catch(e) {
+            res.status(500).send(e);
+        }
     });
 
 app.listen(3001, () => {
