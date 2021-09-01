@@ -15,7 +15,7 @@ const getLighthouseAccessibilityScore = async (url) => {
   await chrome.kill();
   return {
     finalUrl: finalUrl,
-    AccessibilityScore: accessibilityScore
+    accessibilityScore: accessibilityScore
   }
 }
 
