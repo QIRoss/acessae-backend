@@ -13,6 +13,8 @@
     "nodemon": "^2.0.12"
   },
   "dependencies": {
+    "atob": "^2.1.2",
+    "btoa": "^1.2.1",
     "chrome-launcher": "^0.14.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",

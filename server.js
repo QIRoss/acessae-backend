@@ -1,9 +1,14 @@
 const express = require('express');
 require('dotenv').config();
+const cors = require('cors');
 const mongoose = require('mongoose');
-const getLighthouseaccessibilityScore = require('./lighthouseApp')
+const getLighthouseaccessibilityScore = require('./lighthouseApp');
+const atob = require('atob');
+// const btoa = require('btoa');
 
 const app = express();
+
+app.use(cors({origin: '*'}));
 
 mongoose.connect(process.env.DB_URI, {useNewUrlParser: true, useUnifiedTopology: true});
 
@@ -41,34 +46,46 @@ app.route('/api/accessibility')
         console.log(url)
 
         const lighthouseResults = await getLighthouseaccessibilityScore(url);
-
-        Lighthouseaccessibility.findOneAndUpdate(
-            {url: lighthouseResults.finalUrl}, 
-            {accessibility: lighthouseResults.accessibilityScore, $inc: {searches: 1}}, 
-            {useFindAndModify: false, new: true}, 
-            (err, data) => {
-                if (!data){
-                    data = new Lighthouseaccessibility({
-                        url: lighthouseResults.finalUrl,
-                        accessibility: lighthouseResults.accessibilityScore 
-                    });
-                    data.save((err) => {
-                        if(!err){
-                            console.log("New site accessibility created")
-                        }
-                    });
-                } else {
-                    data.save((err) => {
-                        if(!err){
-                            console.log("Update success");
-                        }
-                    });
-                }
-                res.json(data);
-            });
-        // res.json(lighthouseResults);
+        
+        try {
+            Lighthouseaccessibility.findOneAndUpdate(
+                {url: lighthouseResults.finalUrl}, 
+                {accessibility: lighthouseResults.accessibilityScore, $inc: {searches: 1}}, 
+                {useFindAndModify: false, new: true}, 
+                (err, data) => {
+                    if (!data){
+                        data = new Lighthouseaccessibility({
+                            url: lighthouseResults.finalUrl,
+                            accessibility: lighthouseResults.accessibilityScore 
+                        });
+                        data.save((err) => {
+                            if(!err){
+                                console.log("New site accessibility created");
+                            }
+                        });
+                    } else {
+                        data.save((err) => {
+                            if(!err){
+                                console.log("Update success");
+                            }
+                        });
+                    }
+                    res.status(200).send(lighthouseResults.finalUrl);
+                });
+        } catch(e) {
+            res.status(500).send(e);
+        }
 });
 
+app.route("/api/accessibility/:url")
+    .get(async (req,res) => {
+        // console.log(btoa("https://example.com/"),req.params.url );
+        const url = atob(req.params.url);
+        // console.log(url);
+        const urlResponse = await Lighthouseaccessibility.findOne({"url": url});
+        res.json(urlResponse);
+    });
+
 app.listen(3001, () => {
-    console.log("server is online");
-})
+    console.log("Server online on port 3001");
+});
