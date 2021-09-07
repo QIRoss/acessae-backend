@@ -3,7 +3,7 @@ require('dotenv').config();
 const cors = require('cors');
 const mongoose = require('mongoose');
 const getLighthouseaccessibilityScore = require('./lighthouseApp');
-const atob = require('atob');
+// const atob = require('atob');
 // const btoa = require('btoa');
 
 const app = express();
@@ -153,6 +153,8 @@ app.route("/api/uservote/")
         }
     });
 
-app.listen(3001, () => {
-    console.log("Server online on port 3001");
+const PORT = process.env.PORT;
+
+app.listen(PORT, () => {
+    console.log(`Server online on port ${PORT}`);
 });
