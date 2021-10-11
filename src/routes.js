@@ -90,11 +90,7 @@ router.route("/accessibility/:url").get(async (req, res) => {
 });
 
 router.route("/feedback").post(async (req, res) => {
-  const [email, userScore, url] = [
-    req.body.email,
-    req.body.userScore,
-    req.body.url,
-  ];
+  const { name, userScore, url } = req.body;
 
   try {
     lighthouseModel.findOneAndUpdate(
@@ -102,7 +98,7 @@ router.route("/feedback").post(async (req, res) => {
       {
         $push: {
           users_voted: {
-            email: email,
+            name: name,
             userScore: userScore,
           },
         },

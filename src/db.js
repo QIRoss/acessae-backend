@@ -6,7 +6,7 @@ const lighthouseSchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
-  usersVoted: {
+  users_voted: {
     type: Array,
     default: [],
   },
