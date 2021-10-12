@@ -1,21 +1,7 @@
 const mongoose = require("mongoose");
+const { Response } = require("./entities");
 
-const lighthouseSchema = new mongoose.Schema({
-  accessibility: Number,
-  searches: {
-    type: Number,
-    default: 1,
-  },
-  users_voted: {
-    type: Array,
-    default: [],
-  },
-  comments: {
-    type: Array,
-    default: [],
-  },
-  url: String,
-});
+const lighthouseSchema = new mongoose.Schema(Response);
 
 const LighthouseModel = mongoose.model(
   "Lighthouseaccessibility",

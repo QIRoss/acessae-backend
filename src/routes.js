@@ -1,38 +1,36 @@
 const express = require("express");
-const lighthouseModel = require("./db");
-const getLighthouseScore = require("./lighthouseApp");
+const LighthouseModel = require("./db");
+const getLighthouseScore = require("./lighthouse");
 
 const router = express.Router();
 
 router.get("/accessibility", (_, res) => {
-  lighthouseModel.find({}, (_, data) => {
+  LighthouseModel.find({}, (_, data) => {
     res.json(data);
   });
 });
 
 router.post("/accessibility", async (req, res) => {
   const url = req.body.url;
-  console.log(url);
-
   const lighthouseResults = await getLighthouseScore(url);
-  console.log(lighthouseResults);
+
   try {
-    lighthouseModel.findOneAndUpdate(
+    LighthouseModel.findOneAndUpdate(
       { url: lighthouseResults.finalUrl },
       {
-        $set: { accessibility: lighthouseResults.accessibilityScore },
-        $inc: { searches: 1 },
+        $set: { a11y_score: lighthouseResults.accessibilityScore },
+        $inc: { hits: 1 },
       },
       { useFindAndModify: false, new: true },
       (_, data) => {
         if (!data) {
-          data = new lighthouseModel({
+          data = new LighthouseModel({
             url: lighthouseResults.finalUrl,
-            accessibility: lighthouseResults.accessibilityScore,
+            a11y_score: lighthouseResults.accessibilityScore,
           });
           data.save((err) => {
             if (!err) {
-              console.log("New site accessibility created");
+              console.log("New site a11y_score created");
             }
           });
         } else {
@@ -56,32 +54,37 @@ router.route("/accessibility/:url").get(async (req, res) => {
   const lighthouseResults = await getLighthouseScore(url);
   console.log(lighthouseResults);
   try {
-    lighthouseModel.findOneAndUpdate(
+    LighthouseModel.findOneAndUpdate(
       { url: lighthouseResults.finalUrl },
       {
-        $set: { accessibility: lighthouseResults.accessibilityScore },
-        $inc: { searches: 1 },
+        $set: { a11y_score: lighthouseResults.accessibilityScore },
+        $inc: { hits: 1 },
       },
       { useFindAndModify: false, new: true },
-      (err, data) => {
+      (_, data) => {
         if (!data) {
-          data = new lighthouseModel({
+          data = new LighthouseModel({
             url: lighthouseResults.finalUrl,
-            accessibility: lighthouseResults.accessibilityScore,
-          });
-          data.save((err) => {
-            if (!err) {
-              console.log("New site accessibility created");
-            }
-          });
-        } else {
-          data.save((err) => {
-            if (!err) {
-              console.log("Update success");
-            }
+            a11y_score: lighthouseResults.accessibilityScore,
           });
         }
-        res.status(200).json(data);
+
+        data.save((err) => {
+          if (!err) {
+            console.log("New site a11y_score created/updated");
+          }
+        });
+
+        const response = {
+          id: data._id,
+          a11y_score: data.a11y_score,
+          user_score: data.user_score ?? null,
+          hits: data.hits,
+          url: data.url,
+          comments: data.comments || [],
+        };
+
+        res.status(200).json(response);
       }
     );
   } catch (e) {
@@ -90,16 +93,22 @@ router.route("/accessibility/:url").get(async (req, res) => {
 });
 
 router.route("/feedback").post(async (req, res) => {
-  const { name, userScore, url } = req.body;
+  const { name, user_score, url, body } = req.body;
+  const currentTime = new Date();
+
+  let finalUserScore;
+  let numberOfRatings;
 
   try {
-    lighthouseModel.findOneAndUpdate(
-      { url: url },
+    LighthouseModel.findOneAndUpdate(
+      { url },
       {
         $push: {
-          users_voted: {
-            name: name,
-            userScore: userScore,
+          comments: {
+            name,
+            body,
+            user_score: user_score || null,
+            created_at: currentTime.toISOString(),
           },
         },
       },
@@ -109,16 +118,48 @@ router.route("/feedback").post(async (req, res) => {
           res.status(400).send(err);
           return;
         }
+
         if (!data) {
           res.status(404).send("Data not found");
           return;
         }
-        res.status(200).json(data);
+
+        data.comments.forEach((comment) => {
+          if (comment.user_score !== null) {
+            finalUserScore += comment.user_score;
+            numberOfRatings++;
+          }
+        });
+
+        finalUserScore /= numberOfRatings;
       }
     );
   } catch (e) {
     res.status(500).send(e);
   }
+
+  LighthouseModel.findOneAndUpdate(
+    { url },
+    {
+      $set: {
+        user_score: finalUserScore,
+      },
+    },
+    { useFindAndModify: false },
+    (err, data) => {
+      if (err) {
+        res.status(400).send(err);
+        return;
+      }
+
+      if (!data) {
+        res.status(404).send("Data not found 2");
+        return;
+      }
+
+      res.status(200).json(data);
+    }
+  );
 });
 
 module.exports = router;
