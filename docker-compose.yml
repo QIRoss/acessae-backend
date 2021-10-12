@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  web:
+    image: ocmilo/acessae-frontend
+    ports:
+      - "3000:3000"
+  backend:
+    build: ./
+    restart: always
+    network_mode: "host"
