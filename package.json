@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "up": "docker-compose up",
+    "docker-publish": "docker build . -t ocmilo/acessae-backend && docker push ocmilo/acessae-backend"
   },
   "author": "",
   "license": "ISC",
