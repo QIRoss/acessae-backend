@@ -79,7 +79,6 @@ router.route("/accessibility/:url").get(async (req, res) => {
             console.log("New site a11y_score created/updated");
           }
         });
-        console.log(data)
         const response = {
           id: data._id,
           a11y_score: data.a11y_score,
@@ -88,7 +87,7 @@ router.route("/accessibility/:url").get(async (req, res) => {
           url: data.url,
           comments: data.comments || [],
         };
-
+        console.log(response)
         res.status(200).json(response);
       }
     );
