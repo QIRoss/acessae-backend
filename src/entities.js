@@ -3,7 +3,7 @@ const Comment = {
   name: String,
   body: String,
   created_at: String,
-  score: String,
+  user_score: String,
 };
 
 const Response = {
