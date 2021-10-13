@@ -51,7 +51,11 @@ router.post("/accessibility", async (req, res) => {
 router.route("/accessibility/:url").get(async (req, res) => {
   const url = decodeURIComponent(req.params.url);
 
-  const lighthouseResults = await getLighthouseScore(url);
+  // const lighthouseResults = await getLighthouseScore(url);
+  let lighthouseResults = {
+    finalUrl: url,
+    accessibilityScore: undefined
+  }
   console.log(lighthouseResults);
   try {
     LighthouseModel.findOneAndUpdate(
@@ -61,20 +65,21 @@ router.route("/accessibility/:url").get(async (req, res) => {
         $inc: { hits: 1 },
       },
       { useFindAndModify: false, new: true },
-      (_, data) => {
+      async (_, data) => {
         if (!data) {
+          lighthouseResults = await getLighthouseScore(url);
           data = new LighthouseModel({
             url: lighthouseResults.finalUrl,
             a11y_score: lighthouseResults.accessibilityScore,
           });
         }
-
+        
         data.save((err) => {
           if (!err) {
             console.log("New site a11y_score created/updated");
           }
         });
-
+        console.log(data)
         const response = {
           id: data._id,
           a11y_score: data.a11y_score,
