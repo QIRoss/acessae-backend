@@ -96,8 +96,8 @@ router.route("/feedback").post(async (req, res) => {
   const { name, user_score, url, body } = req.body;
   const currentTime = new Date();
 
-  let finalUserScore;
-  let numberOfRatings;
+  let finalUserScore = 0;
+  let numberOfRatings = 0;
 
   try {
     LighthouseModel.findOneAndUpdate(
@@ -107,7 +107,7 @@ router.route("/feedback").post(async (req, res) => {
           comments: {
             name,
             body,
-            user_score: user_score || null,
+            user_score: user_score,
             created_at: currentTime.toISOString(),
           },
         },
